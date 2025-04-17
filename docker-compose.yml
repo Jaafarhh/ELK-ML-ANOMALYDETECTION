@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2 # Use a specific recent version
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g # Allocate 1GB RAM; adjust if needed
+      - xpack.security.enabled=false # Disable security for easier local dev (NOT for production)
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data # Persist ES data
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.13.2
+    container_name: logstash
+    volumes:
+      # Mount the pipeline configuration file
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      # Mount the directory containing the CSV file
+      - ./logs_processing_and_predicting:/usr/share/logstash/csv_data:ro
+    ports:
+      - "5044:5044" # Port for Beats input
+      # - "9600:9600" # Optional: Port for Logstash monitoring API
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+    environment:
+      - LS_JAVA_OPTS=-Xms1g -Xmx1g # Increase to 1GB RAM
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.2
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Connect Kibana to ES container
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a56kcb8927sbdj462kskf83hdue82hdk
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.13.2
+    container_name: filebeat
+    user: root # Needed to access mounted volumes potentially owned by host user
+    volumes:
+      # Mount the Filebeat configuration file
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # Mount the directory containing the CSV file to be read by Filebeat
+      - ./logs_processing_and_predicting:/var/log/input_data:ro
+      # Mount Filebeat's data directory for registry persistence
+      - filebeat_data:/usr/share/filebeat/data
+    depends_on:
+      - logstash
+    networks:
+      - elk
+    command: ["--strict.perms=false"] # May be needed depending on volume permissions
+
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  filebeat_data:
+    driver: local
