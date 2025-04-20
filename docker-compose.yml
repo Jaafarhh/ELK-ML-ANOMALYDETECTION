@@ -22,11 +22,8 @@ services:
     volumes:
       # Mount the pipeline configuration file
       - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-      # Mount the directory containing the CSV file
-      - ./logs_processing_and_predicting:/usr/share/logstash/csv_data:ro
     ports:
-      - "5044:5044" # Port for Beats input
-      # - "9600:9600" # Optional: Port for Logstash monitoring API
+      - "5045:5045" # Expose the new TCP input port
     depends_on:
       - elasticsearch
     networks:
@@ -42,6 +39,7 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Connect Kibana to ES container
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a56kcb8927sbdj462kskf83hdue82hdk
+      - LOGGING_VERBOSE=true
     depends_on:
       - elasticsearch
     networks:
@@ -59,10 +57,24 @@ services:
       # Mount Filebeat's data directory for registry persistence
       - filebeat_data:/usr/share/filebeat/data
     depends_on:
-      - logstash
+      - logstash # Keep dependency in case it sends other data later
     networks:
       - elk
     command: ["--strict.perms=false"] # May be needed depending on volume permissions
+
+  log_simulator:
+    build:
+      context: ./simulator # Path to the directory containing Dockerfile and script
+      dockerfile: Dockerfile
+    container_name: log_simulator
+    volumes:
+      # Mount the directory containing the CSV file to be read by the script
+      - ./logs_processing_and_predicting:/data:ro
+    depends_on:
+      - logstash # Wait for Logstash to start
+    networks:
+      - elk
+    restart: 'no' # Use restart: 'no' so it runs once and stops, or 'on-failure' if you want it to retry
 
 networks:
   elk:

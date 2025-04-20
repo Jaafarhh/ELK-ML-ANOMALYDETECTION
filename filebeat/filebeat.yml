@@ -1,21 +1,21 @@
 # ============================== Filebeat inputs ===============================
 filebeat.inputs:
-  - type: filestream
-    id: my-csv-stream-id # A unique ID for this input stream
-    enabled: true
+  #- type: filestream
+  #id: my-csv-stream-id # A unique ID for this input stream
+  #enabled: true
 
-    # Paths that should be crawled and fetched. Glob based paths.
-    paths:
-      - /var/log/input_data/corrupted_logs.csv # Path INSIDE the container where the CSV is mounted
+  # Paths that should be crawled and fetched. Glob based paths.
+  #paths:
+  #  - /var/log/input_data/corrupted_logs.csv # Path INSIDE the container where the CSV is mounted
 
-    # Ensure Filebeat doesn't try to parse the lines as JSON
-    parsers: []
+  # Ensure Filebeat doesn't try to parse the lines as JSON
+  #parsers: []
 
-    # Settings for reading a static file. Filebeat will read the file on startup.
-    # If the file is replaced, it will be rescanned after check_interval.
-    scan.on_startup: true
-    prospector.scanner.check_interval: 30s
-    close.on_state_change.inactive: 1m # Close file handle if inactive for 1 minute
+  # Settings for reading a static file. Filebeat will read the file on startup.
+  # If the file is replaced, it will be rescanned after check_interval.
+  #scan.on_startup: true
+  #prospector.scanner.check_interval: 30s
+  #close.on_state_change.inactive: 1m # Close file handle if inactive for 1 minute
 
 # ============================== Filebeat outputs ==============================
 
