@@ -26,6 +26,7 @@ services:
       - "5045:5045" # Expose the new TCP input port
     depends_on:
       - elasticsearch
+      - ml_inference # Add dependency: Logstash needs ml_inference to be ready
     networks:
       - elk
     environment:
@@ -66,15 +67,24 @@ services:
     build:
       context: ./simulator # Path to the directory containing Dockerfile and script
       dockerfile: Dockerfile
-    container_name: log_simulator
+    container_name:
     volumes:
       # Mount the directory containing the CSV file to be read by the script
       - ./logs_processing_and_predicting:/data:ro
     depends_on:
-      - logstash # Wait for Logstash to start
+      - logstash # Simulator sends to Logstash
     networks:
       - elk
     restart: 'no' # Use restart: 'no' so it runs once and stops, or 'on-failure' if you want it to retry
+
+  ml_inference:
+    build:
+      context: ./ml_inference # Path to the directory with Dockerfile
+      dockerfile: Dockerfile
+    container_name: ml_inference
+    networks:
+      - elk
+    restart: unless-stopped
 
 networks:
   elk:

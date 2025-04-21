@@ -12,7 +12,7 @@ CSV_FILE_PATH = "/data/corrupted_logs.csv" # Path inside the simulator container
 # 0.1 = 10 logs/sec (~5.5 hours for 200k logs)
 # 1.0 = 1 log/sec (~55 hours for 200k logs)
 # 0.01 = 100 logs/sec (~33 mins for 200k logs)
-DELAY_BETWEEN_LINES = 0.001
+DELAY_BETWEEN_LINES = 0.5
 
 def connect_to_logstash(host, port, max_retries=10, delay=5):
     """Attempts to connect to Logstash with retries."""
