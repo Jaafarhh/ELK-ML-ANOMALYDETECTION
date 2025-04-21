@@ -67,7 +67,7 @@ services:
     build:
       context: ./simulator # Path to the directory containing Dockerfile and script
       dockerfile: Dockerfile
-    container_name:
+    container_name: log_simulator
     volumes:
       # Mount the directory containing the CSV file to be read by the script
       - ./logs_processing_and_predicting:/data:ro
